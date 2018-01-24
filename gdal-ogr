@@ -1,0 +1,50 @@
+Basic information on raster data:
+gdalinfo name_of_raster.tif
+
+Creating list of rasters that are in folder:
+dir /s/b/a *.tif > list.txt
+
+Creating a image mosaic:
+gdal_merge --optfile list.txt -o output_raster.tif
+
+Compression of raster:
+gdal_translate -co "COMPRESS=LZW" input_raster.tif output_raster.tif
+
+Compression of rasters in a batch:
+for %i in (*.tif) do gdal_translate -co "COMPRESS=LZW" %i compress_%i
+
+Changing of coordinate reference system:
+gdal_translate -a_srs "EPSG:27700" input_raster.tif outputraster.tif
+
+Changing of coordinate reference system in a batch:
+for %i in (*.tif) do gdal_translate -a_srs "EPSG:27700" %i compress_%i
+
+Cut raster with shapefile:
+gdalwarp -cutline vectorfile.shp -crop_to_cutline -dstalpha input_raster.tif output_raster.tif
+
+Vectorisation of raster:
+gdal_polygonize input_raster.tif -f "ESRI Shapefile" output.shp
+
+Vectorization of rasters in a batch:
+for %i in (*.tif) do gdal_polygonize %i -f "ESRI Shapefile" %~ni.shp
+
+Performing sql queries on shapefiles in a batch (example: extraction of centroids):
+for %i in (*.shp) do ogr2ogr -sql "SELECT ST_Centroid(geometry), * FROM %~ni WHERE (ST_Area(geometry)>2.1 AND ST_Area(geometry)<2.7 AND DN=0) OR (DN=192 AND ST_Area(geometry)>0.9)" -dialect sqlite Centroid_%~ni.shp %i
+
+Merging multiple shapefiles in a batch:
+for %i in (*.shp) do ogr2ogr -update -append merge.shp %i -nln merge
+
+Import shapefile to database:
+ogr2ogr -update –append -progress -f "PostgreSQL" PG:"dbname=yourDBname host=yourHost port=5432 user=yourUser password=yourPass" -lco PRECISION=NO -lco GEOMETRY_NAME=geom -a_srs "EPSG:27700" -nln "schema.table" input.shp
+
+Import GML file to database:
+ogr2ogr -f "PostgreSQL" PG:"dbname=yourDBname host=yourHost port=5432 user=yourUser password=yourPass" -lco PRECISION=NO -lco GEOMETRY_NAME=geom -a_srs "EPSG:27700" -nln "scheme.table" input.xml layername
+
+Import GeoJSON to databse:
+for %i in (*.json) do ogr2ogr -f "PostgreSQL" -update -append PG:"dbname=yourDBname host=yourHost port=5432 user=yourUser password=yourPass" -lco PRECISION=NO -lco GEOMETRY_NAME=geom -t_srs "EPSG:27700" -nln "schema.table" %i 
+
+import xml:
+for %i in (*.xml) do ogr2ogr -f "PostgreSQL" -update –append -progress PG:"dbname=yourDBname host=yourHost port=5432 user=yourUser password=yourPass" -lco PRECISION=NO -lco GEOMETRY_NAME=geom -t_srs "EPSG:27700" -nln "schema.wtable" %i layername
+
+import shapefile with change column name:
+ogr2ogr -f "PostgreSQL" -update –append -progress PG:"dbname=yourDBname host=yourHost port=5432 user=yourUser password=yourPass" -lco PRECISION=NO -lco GEOMETRY_NAME=geom -a_srs "EPSG:27700" -sql "SELECT xmin as xminimum, ymin as yminimum, xmax as xmaximum, ymax as ymaximum from someTable" -nln "schema.someTable" input.shp
