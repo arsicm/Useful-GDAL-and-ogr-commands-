@@ -48,3 +48,6 @@ for %i in (*.xml) do ogr2ogr -f "PostgreSQL" -update –append -progress PG:"dbn
 
 import shapefile with change column name:
 ogr2ogr -f "PostgreSQL" -update –append -progress PG:"dbname=yourDBname host=yourHost port=5432 user=yourUser password=yourPass" -lco PRECISION=NO -lco GEOMETRY_NAME=geom -a_srs "EPSG:27700" -sql "SELECT xmin as xminimum, ymin as yminimum, xmax as xmaximum, ymax as ymaximum from someTable" -nln "schema.someTable" input.shp
+
+Transfer data from dbA to dbB
+ogr2ogr --config PG_USE_COPY YES -f "PostgreSQL" PG:"dbname=yourDBb host=yourHostB port=5432 user=yourUserB password=yourPassB" -nln "schema.table" PG:"dbname=yourDBa host=yourHostA port=5432 user=yourUserA password=yourPassA" schema.table
